@@ -2,25 +2,43 @@ const API = "http://localhost:8000";
 
 let carrinho = [];
 
+// CARREGA APENAS IDs DOS PRODUTOS
+async function carregarProdutos() {
+    const res = await fetch(`${API}/produtos/`);
+    const produtos = await res.json();
+
+    const select = document.getElementById("produto");
+    select.innerHTML = "";
+
+    produtos.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = `Produto ID ${p.id}`;
+        select.appendChild(opt);
+    });
+}
+
+// ADICIONA AO CARRINHO
 function adicionarCarrinho() {
     const produtoId = Number(document.getElementById("produto").value);
     const quantidade = Number(document.getElementById("quantidade").value);
     const preco = Number(document.getElementById("preco").value);
 
-    if (produtoId <= 0 || quantidade <= 0 || preco <= 0) {
-        alert("Dados inválidos.");
+    if (!produtoId || quantidade <= 0 || preco <= 0) {
+        alert("Preencha todos os campos corretamente.");
         return;
     }
 
     carrinho.push({
         produto_id: produtoId,
-        quantidade: quantidade,
+        quantidade,
         preco_unitario: preco
     });
 
     atualizarCarrinho();
 }
 
+// ATUALIZA TABELA
 function atualizarCarrinho() {
     const tbody = document.getElementById("lista-carrinho");
     tbody.innerHTML = "";
@@ -45,6 +63,7 @@ function atualizarCarrinho() {
         `Total: R$ ${total.toFixed(2)}`;
 }
 
+// FINALIZA VENDA
 async function finalizarVenda() {
     if (carrinho.length === 0) {
         alert("Carrinho vazio.");
@@ -68,10 +87,13 @@ async function finalizarVenda() {
 
     document.getElementById("resultado").innerHTML = `
         <p style="color:#00e676;">
-            Venda registrada! Total: R$ ${data.total}
+            Venda registrada! Total calculado pelo banco: R$ ${data.total}
         </p>
     `;
 
     carrinho = [];
     atualizarCarrinho();
 }
+
+// INIT
+carregarProdutos();
