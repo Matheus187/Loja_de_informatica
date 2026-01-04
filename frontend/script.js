@@ -1,8 +1,7 @@
 const API = "http://localhost:8000";
-
 let carrinho = [];
 
-// CARREGA APENAS IDs DOS PRODUTOS
+// ================= PRODUTOS =================
 async function carregarProdutos() {
     const res = await fetch(`${API}/produtos/`);
     const produtos = await res.json();
@@ -18,14 +17,46 @@ async function carregarProdutos() {
     });
 }
 
-// ADICIONA AO CARRINHO
+// ================= CLIENTES =================
+async function carregarClientes() {
+    const res = await fetch(`${API}/clientes/`);
+    const clientes = await res.json();
+
+    const select = document.getElementById("cliente");
+    select.innerHTML = "";
+
+    clientes.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = `Cliente ID ${c.id}`;
+        select.appendChild(opt);
+    });
+}
+
+// ================= VENDEDORES =================
+async function carregarVendedores() {
+    const res = await fetch(`${API}/vendedores/`);
+    const vendedores = await res.json();
+
+    const select = document.getElementById("vendedor");
+    select.innerHTML = "";
+
+    vendedores.forEach(v => {
+        const opt = document.createElement("option");
+        opt.value = v.id;
+        opt.textContent = `Vendedor ID ${v.id}`;
+        select.appendChild(opt);
+    });
+}
+
+// ================= CARRINHO =================
 function adicionarCarrinho() {
     const produtoId = Number(document.getElementById("produto").value);
     const quantidade = Number(document.getElementById("quantidade").value);
     const preco = Number(document.getElementById("preco").value);
 
     if (!produtoId || quantidade <= 0 || preco <= 0) {
-        alert("Preencha todos os campos corretamente.");
+        alert("Dados inválidos.");
         return;
     }
 
@@ -38,7 +69,6 @@ function adicionarCarrinho() {
     atualizarCarrinho();
 }
 
-// ATUALIZA TABELA
 function atualizarCarrinho() {
     const tbody = document.getElementById("lista-carrinho");
     tbody.innerHTML = "";
@@ -63,7 +93,7 @@ function atualizarCarrinho() {
         `Total: R$ ${total.toFixed(2)}`;
 }
 
-// FINALIZA VENDA
+// ================= FINALIZAR =================
 async function finalizarVenda() {
     if (carrinho.length === 0) {
         alert("Carrinho vazio.");
@@ -87,7 +117,7 @@ async function finalizarVenda() {
 
     document.getElementById("resultado").innerHTML = `
         <p style="color:#00e676;">
-            Venda registrada! Total calculado pelo banco: R$ ${data.total}
+            Venda registrada! Total: R$ ${data.total}
         </p>
     `;
 
@@ -95,5 +125,7 @@ async function finalizarVenda() {
     atualizarCarrinho();
 }
 
-// INIT
+// ================= INIT =================
 carregarProdutos();
+carregarClientes();
+carregarVendedores();

@@ -2,13 +2,13 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>InfoStore</title>
+    <title>Loja de informatica</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <header>
-    <h1>InfoStore</h1>
+    <h1>Loja de informatica</h1>
 </header>
 
 <main>
@@ -49,9 +49,13 @@
 <section class="finalizar-box">
     <h2>Finalizar Venda</h2>
 
-    <input type="number" id="cliente" placeholder="ID Cliente">
-    <input type="number" id="vendedor" placeholder="ID Vendedor">
+    <label>Cliente</label>
+    <select id="cliente"></select>
 
+    <label>Vendedor</label>
+    <select id="vendedor"></select>
+
+    <label>Pagamento</label>
     <select id="pagamento">
         <option value="PIX">PIX</option>
         <option value="CARTAO">Cartão</option>
