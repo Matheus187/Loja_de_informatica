@@ -1,15 +1,15 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, HTTPException 
 from sqlalchemy import text
 from backend.app.database import engine
 from backend.app.schemas import VendaCreate
 
-app = FastAPI()
 
-@app.post("/vendas/")
+router = APIRouter() 
+
+@router.post("/") 
 def criar_venda(venda: VendaCreate):
     with engine.begin() as conn:
         try:
-
             query_venda = text("""
                 INSERT INTO vendas (cliente_id, vendedor_id, metodo_pagamento)
                 VALUES (:cliente_id, :vendedor_id, :metodo_pagamento)
@@ -55,8 +55,7 @@ def criar_venda(venda: VendaCreate):
             print(f"Erro ao processar venda: {e}")
             raise HTTPException(status_code=500, detail=str(e))
 
-
-@app.get("/vendas/")
+@router.get("/") 
 def listar_vendas():
     with engine.connect() as conn:
         query = text("""
@@ -89,49 +88,8 @@ def listar_vendas():
             })
             
         return vendas_lista
-    
-@app.get("/vendas/{id_venda}")
-def obter_venda_detalhada(id_venda: int):
-    with engine.connect() as conn:
 
-        query_venda = text("""
-            SELECT 
-                v.id, v.data, v.metodo_pagamento,
-                c.nome as cliente_nome, c.telefone as cliente_fone,
-                ven.nome as vendedor_nome
-            FROM vendas v
-            JOIN clientes c ON v.cliente_id = c.id
-            JOIN vendedores ven ON v.vendedor_id = ven.id
-            WHERE v.id = :id
-        """)
-        
-        venda = conn.execute(query_venda, {"id": id_venda}).mappings().fetchone()
-        
-        if not venda:
-            raise HTTPException(status_code=404, detail="Venda não encontrada")
-        
-        query_itens = text("""
-            SELECT 
-                p.nome as produto_nome,
-                p.descricao,
-                iv.quantidade,
-                iv.preco_unitario,
-                (iv.quantidade * iv.preco_unitario) as subtotal
-            FROM itens_venda iv
-            JOIN produtos p ON iv.produto_id = p.id
-            WHERE iv.venda_id = :id
-        """)
-        
-        itens = conn.execute(query_itens, {"id": id_venda}).mappings().fetchall()
-        
-        resultado = dict(venda) 
-        resultado["itens"] = [dict(item) for item in itens] 
-        resultado["total_geral"] = sum(item["subtotal"] for item in resultado["itens"])
-        
-        return resultado
-    
-
-@app.get("/vendas/{id_venda}")
+@router.get("/{id_venda}") 
 def obter_venda_detalhada(id_venda: int):
     with engine.connect() as conn:
         query_venda = text("""
@@ -169,3 +127,64 @@ def obter_venda_detalhada(id_venda: int):
         resultado["total_geral"] = sum(item["subtotal"] for item in resultado["itens"])
         
         return resultado
+    
+@router.delete("/{id_venda}")
+def deletar_venda(id_venda: int):
+    with engine.begin() as conn:
+        query_itens = text("SELECT produto_id, quantidade FROM itens_venda WHERE venda_id = :id")
+        itens = conn.execute(query_itens, {"id": id_venda}).fetchall()
+        
+        if not itens:
+        
+            check_venda = conn.execute(text("SELECT id FROM vendas WHERE id = :id"), {"id": id_venda}).fetchone()
+            if not check_venda:
+                raise HTTPException(status_code=404, detail="Venda não encontrada")
+
+        for item in itens:
+            conn.execute(text("""
+                UPDATE produtos SET estoque = estoque + :qtd WHERE id = :pid
+            """), {"qtd": item.quantidade, "pid": item.produto_id})
+
+        conn.execute(text("DELETE FROM itens_venda WHERE venda_id = :id"), {"id": id_venda})
+
+        conn.execute(text("DELETE FROM vendas WHERE id = :id"), {"id": id_venda})
+
+        return {"message": f"Venda {id_venda} deletada e estoque restaurado"}
+    
+@router.put("/{id_venda}")
+def editar_venda(id_venda: int, venda_atualizada: VendaCreate):
+    with engine.begin() as conn:
+        check = conn.execute(text("SELECT id FROM vendas WHERE id = :id"), {"id": id_venda}).fetchone()
+        if not check:
+            raise HTTPException(status_code=404, detail="Venda não encontrada")
+
+        itens_antigos = conn.execute(text("SELECT produto_id, quantidade FROM itens_venda WHERE venda_id = :id"), {"id": id_venda}).fetchall()
+        for item in itens_antigos:
+            conn.execute(text("UPDATE produtos SET estoque = estoque + :qtd WHERE id = :pid"), {"qtd": item.quantidade, "pid": item.produto_id})
+
+        conn.execute(text("DELETE FROM itens_venda WHERE venda_id = :id"), {"id": id_venda})
+
+        conn.execute(text("""
+            UPDATE vendas 
+            SET cliente_id = :cid, vendedor_id = :vid, metodo_pagamento = :metodo
+            WHERE id = :id
+        """), {
+            "cid": venda_atualizada.cliente_id,
+            "vid": venda_atualizada.vendedor_id,
+            "metodo": venda_atualizada.metodo_pagamento,
+            "id": id_venda
+        })
+
+        for item in venda_atualizada.itens:
+            res_preco = conn.execute(text("SELECT preco FROM produtos WHERE id = :pid"), {"pid": item.produto_id}).fetchone()
+            if not res_preco:
+                raise HTTPException(status_code=404, detail=f"Produto {item.produto_id} não encontrado")
+            
+            conn.execute(text("""
+                INSERT INTO itens_venda (venda_id, produto_id, quantidade, preco_unitario)
+                VALUES (:vid, :pid, :qtd, :preco)
+            """), {"vid": id_venda, "pid": item.produto_id, "qtd": item.quantidade, "preco": res_preco.preco})
+            
+            conn.execute(text("UPDATE produtos SET estoque = estoque - :qtd WHERE id = :pid"), {"qtd": item.quantidade, "pid": item.produto_id})
+
+        return {"message": "Venda atualizada com sucesso"}
