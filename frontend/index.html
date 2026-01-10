@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Loja de informatica</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <h1>Loja de informatica</h1>
+</header>
+
+<main>
+
+<section class="produto-box">
+    <h2>Adicionar Produto</h2>
+
+    <label>ID do Produto</label>
+    <select id="produto"></select>
+
+    <label>Quantidade</label>
+    <input type="number" id="quantidade" value="1" min="1">
+
+    <label>Preço Unitário (R$)</label>
+    <input type="number" id="preco" step="0.01">
+
+    <button onclick="adicionarCarrinho()">Adicionar ao Carrinho</button>
+</section>
+
+<section class="carrinho-box">
+    <h2>Carrinho</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID Produto</th>
+                <th>Qtd</th>
+                <th>Preço</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody id="lista-carrinho"></tbody>
+    </table>
+
+    <p id="total">Total: R$ 0.00</p>
+</section>
+
+<section class="finalizar-box">
+    <h2>Finalizar Venda</h2>
+
+    <label>Cliente</label>
+    <select id="cliente"></select>
+
+    <label>Vendedor</label>
+    <select id="vendedor"></select>
+
+    <label>Pagamento</label>
+    <select id="pagamento">
+        <option value="PIX">PIX</option>
+        <option value="CARTAO">Cartão</option>
+        <option value="DINHEIRO">Dinheiro</option>
+    </select>
+
+    <button onclick="finalizarVenda()">Finalizar Venda</button>
+
+    <div id="resultado"></div>
+</section>
+
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>
