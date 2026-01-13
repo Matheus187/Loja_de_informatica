@@ -10,13 +10,13 @@ def categoria_mais_vendida():
         query = text("""
             SELECT 
                 c.nome AS categoria, 
-                COUNT(iv.venda_id) AS total_vendas
+                SUM(iv.quantidade) AS total_vendas
             FROM categorias c
             INNER JOIN produtos p ON c.id = p.categoria_id
             INNER JOIN itens_venda iv ON p.id = iv.produto_id
             GROUP BY c.id, c.nome
             ORDER BY total_vendas DESC
-            LIMIT 1
+            LIMIT 1;
         """)
         result = conn.execute(query).mappings().fetchone()
         return dict(result) if result else {"message": "Nenhum dado encontrado"}
@@ -25,14 +25,14 @@ def categoria_mais_vendida():
 def categoria_mais_produtos():
     with engine.connect() as conn:
         query = text("""
-            SELECT
+            SELECT 
                 c.nome AS categoria,
-                COUNT(p.id) as total_produtos
+                SUM(p.estoque) AS total_itens_estoque
             FROM categorias c
-            INNER JOIN produtos p ON c.id = p.categoria_id
+            JOIN produtos p ON c.id = p.categoria_id
             GROUP BY c.id, c.nome
-            ORDER BY total_produtos DESC
-            LIMIT 1
+            ORDER BY total_itens_estoque DESC
+            LIMIT 1;
         """)
         result = conn.execute(query).mappings().fetchone()
         return dict(result) if result else {"message": "Nenhum dado encontrado"}
