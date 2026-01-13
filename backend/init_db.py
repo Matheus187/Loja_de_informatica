@@ -1,5 +1,5 @@
 from sqlalchemy import text
-from backend.app.database import engine
+from app.database import engine
 
 def criar_tabelas():
     with engine.connect() as conn:

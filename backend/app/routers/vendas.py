@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException 
 from sqlalchemy import text
-from backend.app.database import engine
-from backend.app.schemas import VendaCreate
+from ..database import engine
+from ..schemas import VendaCreate
 
 
 router = APIRouter() 
@@ -94,7 +94,7 @@ def obter_venda_detalhada(id_venda: int):
     with engine.connect() as conn:
         query_venda = text("""
             SELECT 
-                v.id, v.data, v.metodo_pagamento,
+                v.id, v.data, v.metodo_pagamento, v.cliente_id, v.vendedor_id,
                 c.nome as cliente_nome, c.telefone as cliente_fone,
                 ven.nome as vendedor_nome
             FROM vendas v
@@ -110,6 +110,7 @@ def obter_venda_detalhada(id_venda: int):
         
         query_itens = text("""
             SELECT 
+                iv.produto_id,
                 p.nome as produto_nome,
                 p.descricao,
                 iv.quantidade,
