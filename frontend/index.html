@@ -11,9 +11,15 @@
   <span class="logo">LOJA DE INFORMÁTICA</span>
   <a onclick="mostrarTela('cadastrar')">Cadastrar venda</a>
   <a onclick="mostrarTela('listar')">Listar as vendas</a>
-  <a onclick="mostrarTela('listar')">Categoria mais vendida</a>
-  <a onclick="mostrarTela('listar')">Produto mais vendido</a>
+  <a onclick="mostrarTela('relatorioMaisVendida')">Categoria mais vendida</a>
+  <a onclick="mostrarTela('relatorioMaisProdutos')">Categoria com mais produtos</a>
 </nav>
+
+<div id="relatorioBox" class="relatorio" style="display:none; padding:16px; border:1px solid #ccc; margin:12px; background:#fafafa;">
+  <button style="float:right" onclick="fecharRelatorio()">Fechar</button>
+  <h3 id="relatorioTitulo"></h3>
+  <div id="relatorioConteudo"></div>
+</div>
 
 <!-- CADASTRAR -->
 <section id="cadastrar" class="tela active">
@@ -65,6 +71,18 @@
   </table>
 </section>
 
+<!-- RELATÓRIO: MAIS VENDIDA -->
+<section id="relatorioMaisVendida" class="tela">
+  <h2>Categoria mais vendida</h2>
+  <div id="conteudoMaisVendida">Clique em atualizar para carregar.</div>
+</section>
+
+<!-- RELATÓRIO: CATEGORIA COM MAIS PRODUTOS -->
+<section id="relatorioMaisProdutos" class="tela">
+  <h2>Categoria com mais produtos</h2>
+  <div id="conteudoMaisProdutos">Clique em atualizar para carregar.</div>
+</section>
+
 <!-- EDITAR -->
 <section id="editar" class="tela">
   <h2>Editar Venda</h2>
@@ -98,6 +116,7 @@
 
   <button class="btn-principal" onclick="salvarEdicao()">Salvar Alterações</button>
   <button onclick="mostrarTela('listar')">Cancelar</button>
+  <button class="btn-danger" onclick="deletarVendaEdicao()" style="margin-left:8px;background:#c0392b;color:#fff;border:none;padding:8px 12px;cursor:pointer;">Excluir Venda</button>
 </section>
 
 <script src="vendas.js"></script>
