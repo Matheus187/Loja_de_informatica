@@ -7,10 +7,6 @@ function mostrarTela(id) {
   document.querySelectorAll(".tela").forEach(t => t.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 
-  // esconder/limpar painel de relatório quando trocar de tela
-  const rb = document.getElementById('relatorioBox');
-  if (rb) { rb.style.display = 'none'; document.getElementById('relatorioTitulo').textContent = ''; document.getElementById('relatorioConteudo').innerHTML = ''; }
-
   if (id === "listar") {
     carregarVendas();
   }
@@ -33,8 +29,7 @@ if (typeof window !== 'undefined') {
   window.adicionarItemEdicao = adicionarItemEdicao;
   window.salvarEdicao = salvarEdicao;
   window.deletarVendaEdicao = deletarVendaEdicao;
-  window.mostrarCategoriaMaisVendida = mostrarCategoriaMaisVendida;
-  window.mostrarCategoriaComMaisProdutos = mostrarCategoriaComMaisProdutos;
+  
 }
 
 function adicionarItem() {
@@ -230,64 +225,6 @@ async function deletarVendaEdicao() {
   }
 }
 
-// RELATÓRIOS
-async function mostrarCategoriaMaisVendida() {
-  try {
-    const res = await fetch(`${API_URL}/relatorios/categoria-mais-vendida`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    if (data.message) { mostrarRelatorio('Categoria mais vendida', `<p>${data.message}</p>`); return; }
-    // aceitar múltiplos nomes de campo que o backend pode retornar
-    const nome = data.categoria ?? data.nome ?? data.categoria_nome ?? data.category;
-    const quantidade = data.total_unidades ?? data.total_vendas ?? data.total ?? data.quantidade ?? data.total_itens_estoque ?? data.total_produtos ?? 0;
-    const receita = data.receita_total ?? data.receita ?? data.total_valor ?? null;
-    const html = `
-      <p><strong>Categoria:</strong> ${nome ?? '—'}</p>
-      <p><strong>Total (vendas):</strong> ${Number(quantidade).toLocaleString()}</p>
-      ${receita !== null ? `<p><strong>Receita total:</strong> ${Number(receita).toFixed(2)}</p>` : ''}
-    `;
-    mostrarRelatorio('Categoria mais vendida', html);
-  } catch (err) {
-    console.error('Erro ao buscar categoria mais vendida:', err);
-    mostrarRelatorio('Categoria mais vendida', '<p>Erro ao buscar relatório</p>');
-  }
-}
-
-async function mostrarCategoriaComMaisProdutos() {
-  try {
-    const res = await fetch(`${API_URL}/relatorios/categoria-com-mais-produtos`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    if (data.message) { mostrarRelatorio('Categoria com mais produtos', `<p>${data.message}</p>`); return; }
-    // aceitar múltiplos nomes de campo que o backend pode retornar
-    const nome = data.categoria ?? data.nome ?? data.categoria_nome ?? data.category;
-    const quantidade = data.total_itens_estoque ?? data.total_produtos ?? data.total ?? data.quantidade ?? 0;
-    const html = `
-      <p><strong>Categoria:</strong> ${nome ?? '—'}</p>
-      <p><strong>Quantidade total em estoque:</strong> ${Number(quantidade).toLocaleString()}</p>
-    `;
-    mostrarRelatorio('Categoria com mais produtos', html);
-  } catch (err) {
-    console.error('Erro ao buscar categoria com mais produtos:', err);
-    mostrarRelatorio('Categoria com mais produtos', '<p>Erro ao buscar relatório</p>');
-  }
-}
-
-function mostrarRelatorio(titulo, html) {
-  const box = document.getElementById('relatorioBox');
-  if (!box) { alert(`${titulo}\n\n${html.replace(/<[^>]+>/g, '')}`); return; }
-  document.getElementById('relatorioTitulo').textContent = titulo;
-  document.getElementById('relatorioConteudo').innerHTML = html;
-  box.style.display = 'block';
-  // rolar para o box
-  box.scrollIntoView({behavior: 'smooth'});
-}
-
-function fecharRelatorio() {
-  const box = document.getElementById('relatorioBox');
-  if (box) box.style.display = 'none';
-}
-
 // Carregadores para as telas de relatório
 async function carregarCategoriaMaisVendidaTela() {
   const el = document.getElementById('conteudoMaisVendida');
@@ -299,12 +236,10 @@ async function carregarCategoriaMaisVendidaTela() {
     const data = await res.json();
     if (data.message) { el.innerHTML = `<p>${data.message}</p>`; return; }
     const nome = data.categoria;
-    const quantidade = data.total_vendas ??0;
-    const receita = data.receita_total ?? data.receita ?? null;
+    const quantidade = data.total_vendas ?? 0;
     const html = `
       <p><strong>Categoria:</strong> ${nome ?? '—'}</p>
       <p><strong>Total (vendas):</strong> ${Number(quantidade || 0).toLocaleString()}</p>
-      ${receita !== null ? `<p><strong>Receita total:</strong> ${Number(receita).toFixed(2)}</p>` : ''}
     `;
     el.innerHTML = html;
   } catch (err) {
@@ -322,8 +257,8 @@ async function carregarCategoriaComMaisProdutosTela() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if (data.message) { el.innerHTML = `<p>${data.message}</p>`; return; }
-    const nome = data.categoria ?? data.nome ?? data.categoria_nome ?? data.category;
-    const quantidade = data.total_produtos ?? data.total_itens_estoque ?? data.total ?? data.quantidade ?? 0;
+    const nome = data.categoria;
+    const quantidade = data.total_itens_estoque ?? 0;
     const html = `
       <p><strong>Categoria:</strong> ${nome ?? '—'}</p>
       <p><strong>Quantidade total em estoque:</strong> ${Number(quantidade || 0).toLocaleString()}</p>
@@ -334,4 +269,3 @@ async function carregarCategoriaComMaisProdutosTela() {
     el.innerHTML = '<p>Erro ao carregar relatório</p>';
   }
 }
-
